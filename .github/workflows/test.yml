@@ -62,7 +62,6 @@ jobs:
         with:
           name: dist-files
           path: dist
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -72,12 +71,10 @@ jobs:
         with:
           name: dist-files
       - name: Output content
-        run: la
+        run: ls
       - name: Deploy
         run: echo "Deploying..."
-      # Add your deployment steps here, for example:
-      # - name: Deploy to server
-      #   run: some-deploy-script.sh
+
 
         
 
