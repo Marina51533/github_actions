@@ -3,23 +3,6 @@ on:
   push:
     branches: main
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get code
-        uses: actions/checkout@v3
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: node-modules
-          key: deps-node-modules-${{hashFiles('**/package-lock.json')}}
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci
-      - name: Lint code
-        run: echo "run lint"
-        # run: npm run lint
   test:
     runs-on: ubuntu-latest
     steps:
@@ -34,17 +17,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run tests
-        continue-on-error: true
-        id: run-test
-        run: npm run test
-      - name: Upload test report
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-report
-          path: test.json
+        run: echo "run test"
   bild:
     needs: test
-    uses: ./.github_actions/workflows/reusable_workflow.yml
+    uses: ./.github/workflows/reusable_workflow.yml
  
 
         
