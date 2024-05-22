@@ -1,32 +1,82 @@
-name: Matrix demo
+name: Website Deployment
 on:
   push:
     branches: main
 jobs:
-  build:
-    continue-on-error: true
-    strategy:
-      matrix:
-        node-version: [12, 14, 16]
-        operating-system: [ubuntu-latest,windows-latest]
-        include:
-          - node-version: 18
-            operating-system: windows
-        exclude:
-          - node-version: 12
-            operating-system: ubuntu-latest
-    runs-on: ${{matrix.operating-system}}
+  lint:
+    runs-on: ubuntu-latest
     steps:
       - name: Get code
         uses: actions/checkout@v3
-      - name: Install NodeJS
-        uses: actions/setup-node@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
         with:
-            node-version: ${{matrix.node-version}}
+          path: node-modules
+          key: deps-node-modules-${{hashFiles('**/package-lock.json')}}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Lint code
+        run: echo "run lint"
+        # run: npm run lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: deps-node-modules-${{hashFiles('**/package-lock.json')}}
       - name: Install dependencies
         run: npm ci
-      - name: Build project
+      - name: Run tests
+        continue-on-error: true
+        id: run-test
+        run: npm run test
+      - name: Upload test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report
+          path: test.json
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: deps-node-modules-${{hashFiles('**/package-lock.json')}}
+      - name: Install dependencies
+        run: npm ci   
+      - name: Build website
+        id: build-website
         run: npm run build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: dist
+  deploy:
+    needs: build
+    uses: ./.github_actions/workflows/reusable_workflow.yml
+  report:
+    needs: [lint,deploy]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output info
+        run: |
+          echo "Something went wrong..."
+          echo "${{github}}"
 
 
 
