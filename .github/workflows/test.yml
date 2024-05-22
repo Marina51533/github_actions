@@ -42,43 +42,10 @@ jobs:
         with:
           name: test-report
           path: test.json
-
-  build:
+  bild:
     needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get code
-        uses: actions/checkout@v3
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: deps-node-modules-${{hashFiles('**/package-lock.json')}}
-      - name: Install dependencies
-        run: npm ci   
-      - name: Build website
-        id: build-website
-        run: npm run build
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist-files
-          path: dist
-  deploy:
-    needs: build
     uses: ./.github_actions/workflows/reusable_workflow.yml
-  report:
-    needs: [lint,deploy]
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Output info
-        run: |
-          echo "Something went wrong..."
-          echo "${{github}}"
-
-
+ 
 
         
 
